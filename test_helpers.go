@@ -1,40 +1,56 @@
 package main
 
 import (
-	"fmt"
+	cp "github.com/otiai10/copy"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-func SetupTestEnvironment(t *testing.T, studentCount int) string {
-	tmpDir := CreateTmpDir()
-	t.Logf("tmpDir: %s", tmpDir)
+func TestSetupTestEnvironment(t *testing.T) string {
+	tmpDir := TestCreateTmpDir()
 
-	for i := 1; i <= studentCount; i++ {
-		fullNewDir := fmt.Sprintf("%s/student%v", tmpDir, i)
-		t.Logf("fullNewDir: %s", fullNewDir)
+	err := cp.Copy("resources/example/", tmpDir)
 
-		mkDirErr := os.Mkdir(fullNewDir, 0750)
-		if mkDirErr != nil {
-			t.Fatalf("Could not create dir %q", mkDirErr)
-		}
+	if err != nil {
+		t.Fatalf("Could not create tmp dir, error: %s", err)
+	}
 
-		exampleFile, _ := os.ReadFile("example_exam.pdf")
-
-		examFileName := fmt.Sprintf("%s/exam_%v", fullNewDir, i)
-
-		err := os.WriteFile(examFileName, exampleFile, 0750)
-		if err != nil {
-			t.Fatalf("Could not create %s", examFileName)
-		}
-		t.Logf("Created %s/%s", fullNewDir, examFileName)
+	dirs := TestListSubDirTree(tmpDir, t)
+	for _, dir := range dirs {
+		t.Logf("Created %s/%s", tmpDir, dir)
 	}
 
 	return tmpDir
 }
 
-func CreateTmpDir() string {
+func TestListSubDirTree(tmpDir string, t *testing.T) []string {
+	var dirs []string
+
+	err := filepath.Walk(tmpDir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		dirs = append(dirs, info.Name())
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Cannot list all sub directories %s", err)
+	}
+
+	return dirs
+}
+
+func TestRemove(path string, t *testing.T) {
+	err := os.RemoveAll(path)
+	if err != nil {
+		t.Fatalf("Could not remove %s, error %s", path, err)
+	}
+}
+
+func TestCreateTmpDir() string {
 	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		log.Fatal(err)
@@ -43,8 +59,8 @@ func CreateTmpDir() string {
 	return dir
 }
 
-// exists returns whether the given file or directory exists
-func exists(path string) (bool, error) {
+// TestExists returns whether the given file or directory TestExists
+func TestExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
