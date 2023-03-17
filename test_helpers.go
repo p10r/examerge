@@ -2,6 +2,7 @@ package main
 
 import (
 	cp "github.com/otiai10/copy"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"io/fs"
 	"log"
 	"os"
@@ -43,7 +44,7 @@ func TestListSubDirTree(tmpDir string, t *testing.T) []string {
 	return dirs
 }
 
-func TestRemove(path string, t *testing.T) {
+func TestTearDown(path string, t *testing.T) {
 	err := os.RemoveAll(path)
 	if err != nil {
 		t.Fatalf("Could not remove %s, error %s", path, err)
@@ -69,4 +70,24 @@ func TestExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+func TestExistsOrThrow(path string, t *testing.T) {
+	exists, err := TestExists(path)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+	if !exists {
+		t.Fatalf("%s does not exist", path)
+	}
+}
+
+func AssertIsMerged(t *testing.T, exam Exam) {
+	pageCount, err := api.PageCountFile(exam.file)
+	if err != nil {
+		t.Fatalf("Got error, expected none %q", err)
+	}
+	if pageCount != 4 {
+		t.Fatalf("Expected page count to be 4, but was %d", pageCount)
+	}
 }
