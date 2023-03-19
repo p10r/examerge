@@ -1,8 +1,6 @@
 name: Release Windows Binary
 
-on:
-  release:
-    types: [created]
+on: [push]
 
 jobs:
   release-windows-amd64:
