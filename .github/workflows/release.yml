@@ -1,4 +1,4 @@
-name: Release Windows Binary
+name: Release Binary
 
 on: [push]
 
