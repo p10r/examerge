@@ -31,3 +31,9 @@ brew install lefthook golangci-lint
 ### Linting
 
 Make sure to run `golangci-lint run`
+
+## Release
+
+Examerge is currently only being run on Windows. It's build on every push via a hook.
+
+See [lefthook.yml](./lefthook.yml) for details.

@@ -4,3 +4,7 @@ pre-commit:
       run: go test ./...
     go-lint:
       run: golangci-lint run
+pre-push:
+  commands:
+    build:
+      run: GOOS=windows GOARCH=amd64 go build -o bin/examerge.exe
