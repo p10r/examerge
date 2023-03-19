@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	cp "github.com/otiai10/copy"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"golang.org/x/exp/slices"
@@ -13,6 +12,7 @@ import (
 )
 
 const outputDirName = "/generated"
+const logFileName = "examerge.log"
 
 type Exam struct {
 	file string
@@ -24,12 +24,31 @@ type Rating struct {
 
 func main() {
 	workingDir, _ := os.Getwd()
-	Workflow(workingDir)
+
+	logFile := setupFileLogging(workingDir)
+	defer logFile.Close()
+
+	log.Printf("Target path is %s\n", workingDir)
+
+	examCount := Workflow(workingDir)
+
+	log.Printf("Processed %v exams", examCount)
 }
 
-func Workflow(path string) {
-	log.Printf("Target path is %s\n", path)
+func setupFileLogging(workingDir string) *os.File {
+	logFile, err := os.OpenFile(
+		filepath.Join(workingDir, logFileName),
+		os.O_APPEND|os.O_RDWR|os.O_CREATE,
+		0644,
+	)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.SetOutput(logFile)
+	return logFile
+}
 
+func Workflow(path string) int {
 	outputPath, err := CreateOutputDirIn(path)
 	if err != nil {
 		log.Fatalf("Could not create output directory %v", outputDirName)
@@ -40,7 +59,7 @@ func Workflow(path string) {
 		log.Fatalf("Error when trying to copy exams into /generated %q", err)
 	}
 
-	MergeAll(outputPath, "example_rating")
+	return MergeAll(outputPath, "example_rating")
 }
 
 func CreateOutputDirIn(path string) (string, error) {
@@ -59,12 +78,15 @@ func CopyExceptGenerated(input, output string) error {
 	return cp.Copy(input, output, options)
 }
 
-func MergeAll(parentDir, ratingPrefix string) {
+func MergeAll(parentDir, ratingPrefix string) int {
 	dirs := findDirsIn(parentDir)
-
+	var fileCount = 0
 	for _, dir := range dirs {
-		fmt.Println("Current dir: " + dir) //TODO log
+		log.Printf("Current dir: %s\n", dir)
 		exam, rating, err := ExamAndRatingFrom(dir, ratingPrefix)
+		if err == nil {
+			fileCount++
+		}
 		if err != nil {
 			log.Fatalf("handle me") //TODO log
 		}
@@ -73,6 +95,7 @@ func MergeAll(parentDir, ratingPrefix string) {
 			log.Fatalf("could not merge %s and %s, error: %s", exam.file, rating.file, err)
 		}
 	}
+	return fileCount
 }
 
 func findDirsIn(parentDir string) []string {
