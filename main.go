@@ -37,19 +37,6 @@ func main() {
 	log.Printf("Processed %v exams", examCount)
 }
 
-func setupFileLogging(workingDir string) *os.File {
-	logFile, err := os.OpenFile(
-		filepath.Join(workingDir, logFileName),
-		os.O_APPEND|os.O_RDWR|os.O_CREATE,
-		0644,
-	)
-	if err != nil {
-		log.Panic(err)
-	}
-	log.SetOutput(logFile)
-	return logFile
-}
-
 func Workflow(path, ratingPrefix string) int {
 	outputPath, err := CreateOutputDirIn(path)
 	if err != nil {
@@ -100,21 +87,6 @@ func MergeAll(parentDir, ratingPrefix string) int {
 	return fileCount
 }
 
-func findDirsIn(parentDir string) []string {
-	items, err := os.ReadDir(parentDir)
-	if err != nil {
-		log.Fatalf("Could not read items in %s, got %s", parentDir, err)
-	}
-
-	var dirs []string
-	for _, item := range items {
-		if item.IsDir() {
-			dirs = append(dirs, filepath.Join(parentDir, item.Name()))
-		}
-	}
-	return dirs
-}
-
 func Merge(exam Exam, rating Rating) (Exam, error) {
 	inputPaths := []string{rating.file}
 
@@ -158,4 +130,32 @@ func ExamAndRatingFrom(dir, ratingPrefix string) (Exam, Rating, error) {
 	return Exam{filepath.Join(dir, items[examIndex].Name())},
 		Rating{filepath.Join(dir, items[ratingIndex].Name())},
 		nil
+}
+
+func findDirsIn(parentDir string) []string {
+	items, err := os.ReadDir(parentDir)
+	if err != nil {
+		log.Fatalf("Could not read items in %s, got %s", parentDir, err)
+	}
+
+	var dirs []string
+	for _, item := range items {
+		if item.IsDir() {
+			dirs = append(dirs, filepath.Join(parentDir, item.Name()))
+		}
+	}
+	return dirs
+}
+
+func setupFileLogging(workingDir string) *os.File {
+	logFile, err := os.OpenFile(
+		filepath.Join(workingDir, logFileName),
+		os.O_APPEND|os.O_RDWR|os.O_CREATE,
+		0644,
+	)
+	if err != nil {
+		log.Panic(err)
+	}
+	log.SetOutput(logFile)
+	return logFile
 }
