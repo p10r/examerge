@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const outputDir = "/generated"
+const outputDirName = "/generated"
 
 type Exam struct {
 	file string
@@ -23,21 +23,28 @@ type Rating struct {
 }
 
 func main() {
-
+	workingDir, _ := os.Getwd()
+	Workflow(workingDir)
 }
 
 func Workflow(path string) {
-	path, err := CreateOutputDirIn(path)
-	if err != nil {
-		log.Fatalf("Could not create output directory %v", outputDir)
-	}
-	workingDir, _ := os.Getwd()
+	log.Printf("Target path is %s\n", path)
 
-	CopyExceptGenerated(workingDir, path)
+	outputPath, err := CreateOutputDirIn(path)
+	if err != nil {
+		log.Fatalf("Could not create output directory %v", outputDirName)
+	}
+
+	err = CopyExceptGenerated(path, outputPath)
+	if err != nil {
+		log.Fatalf("Error when trying to copy exams into /generated %q", err)
+	}
+
+	MergeAll(outputPath, "example_rating")
 }
 
 func CreateOutputDirIn(path string) (string, error) {
-	destination := path + outputDir
+	destination := path + outputDirName
 	err := os.Mkdir(destination, 0750)
 	return destination, err
 }
@@ -46,7 +53,7 @@ func CopyExceptGenerated(input, output string) error {
 	options := cp.Options{
 		Skip: func(srcInfo os.FileInfo, src, dest string) (bool, error) {
 			dirName := "/" + srcInfo.Name()
-			return dirName == outputDir, nil
+			return dirName == outputDirName, nil
 		},
 	}
 	return cp.Copy(input, output, options)
@@ -61,8 +68,10 @@ func MergeAll(parentDir, ratingPrefix string) {
 		if err != nil {
 			log.Fatalf("handle me") //TODO log
 		}
-		Merge(exam, rating) //TODO handle
-		os.Remove(rating.file)
+		_, err = Merge(exam, rating)
+		if err != nil {
+			log.Fatalf("could not merge %s and %s, error: %s", exam.file, rating.file, err)
+		}
 	}
 }
 
@@ -87,6 +96,10 @@ func Merge(exam Exam, rating Rating) (Exam, error) {
 	err := api.MergeAppendFile(inputPaths, exam.file, nil)
 	if err != nil {
 		return Exam{}, err
+	}
+	err = os.Remove(rating.file)
+	if err != nil {
+		log.Fatalf("could not remove %s, error: %s", rating.file, err)
 	}
 
 	return exam, nil
