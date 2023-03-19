@@ -61,7 +61,8 @@ func TestCreateTmpDir() string {
 }
 
 // TestExists returns whether the given file or directory TestExists
-func TestExists(path string) (bool, error) {
+func TestExists(t *testing.T, path string) (bool, error) {
+	t.Helper()
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -73,21 +74,35 @@ func TestExists(path string) (bool, error) {
 }
 
 func TestExistsOrThrow(path string, t *testing.T) {
-	exists, err := TestExists(path)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	t.Helper()
+	exists, err := TestExists(t, path)
+	AssertNoError(t, err)
 	if !exists {
 		t.Fatalf("%s does not exist", path)
 	}
 }
 
 func AssertIsMerged(t *testing.T, exam Exam) {
+	t.Helper()
 	pageCount, err := api.PageCountFile(exam.file)
 	if err != nil {
 		t.Fatalf("Got error, expected none %q", err)
 	}
 	if pageCount != 4 {
 		t.Fatalf("Expected page count to be 4, but was %d", pageCount)
+	}
+}
+
+func AssertNoError(t testing.TB, got error) {
+	t.Helper()
+	if got != nil {
+		t.Fatal("got an error but didn't expect one")
+	}
+}
+
+func AssertError(t testing.TB, got error) {
+	t.Helper()
+	if got == nil {
+		t.Fatal("didn't get an error but expected one")
 	}
 }
