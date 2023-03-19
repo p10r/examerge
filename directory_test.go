@@ -7,7 +7,7 @@ import (
 
 func TestE2E(t *testing.T) {
 	tmpDir := TestSetupTestEnvironment(t)
-	Workflow(tmpDir)
+	Workflow(tmpDir, "example_rating")
 
 	t.Run("moves all exams", func(t *testing.T) {
 		firstExam := filepath.Join(tmpDir, "generated", "student1", "example_exam1.pdf")

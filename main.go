@@ -23,6 +23,8 @@ type Rating struct {
 }
 
 func main() {
+	ratingPrefix := "rating_"
+
 	workingDir, _ := os.Getwd()
 
 	logFile := setupFileLogging(workingDir)
@@ -30,7 +32,7 @@ func main() {
 
 	log.Printf("Target path is %s\n", workingDir)
 
-	examCount := Workflow(workingDir)
+	examCount := Workflow(workingDir, ratingPrefix)
 
 	log.Printf("Processed %v exams", examCount)
 }
@@ -48,7 +50,7 @@ func setupFileLogging(workingDir string) *os.File {
 	return logFile
 }
 
-func Workflow(path string) int {
+func Workflow(path, ratingPrefix string) int {
 	outputPath, err := CreateOutputDirIn(path)
 	if err != nil {
 		log.Fatalf("Could not create output directory %v", outputDirName)
@@ -59,7 +61,7 @@ func Workflow(path string) int {
 		log.Fatalf("Error when trying to copy exams into /generated %q", err)
 	}
 
-	return MergeAll(outputPath, "example_rating")
+	return MergeAll(outputPath, ratingPrefix)
 }
 
 func CreateOutputDirIn(path string) (string, error) {
