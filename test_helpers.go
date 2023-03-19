@@ -118,3 +118,17 @@ func AssertError(t testing.TB, got error, message string) {
 		t.Fatal("didn't get an error but expected one")
 	}
 }
+
+func AssertExists(t *testing.T, path string) {
+	t.Helper()
+	if !TestExists(t, path) {
+		t.Errorf("Expected %s to exist, but doesn't", path)
+	}
+}
+
+func AssertDoesntExist(t *testing.T, path string) {
+	t.Helper()
+	if TestExists(t, path) {
+		t.Errorf("Expected %s to be removed, but isn't", path)
+	}
+}
