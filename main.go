@@ -53,12 +53,7 @@ func CopyExceptGenerated(input, output string) error {
 }
 
 func MergeAll(parentDir, ratingPrefix string) {
-	items, err := os.ReadDir(parentDir)
-	if err != nil {
-		log.Fatalf("Could not read items in %s, got %s", parentDir, err)
-	}
-
-	dirs := FindDirsIn(parentDir, items)
+	dirs := findDirsIn(parentDir)
 
 	for _, dir := range dirs {
 		fmt.Println("Current dir: " + dir) //TODO log
@@ -67,10 +62,16 @@ func MergeAll(parentDir, ratingPrefix string) {
 			log.Fatalf("handle me") //TODO log
 		}
 		Merge(exam, rating) //TODO handle
+		os.Remove(rating.file)
 	}
 }
 
-func FindDirsIn(parentDir string, items []os.DirEntry) []string {
+func findDirsIn(parentDir string) []string {
+	items, err := os.ReadDir(parentDir)
+	if err != nil {
+		log.Fatalf("Could not read items in %s, got %s", parentDir, err)
+	}
+
 	var dirs []string
 	for _, item := range items {
 		if item.IsDir() {

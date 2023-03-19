@@ -44,10 +44,19 @@ func TestListSubDirTree(tmpDir string, t *testing.T) []string {
 	return dirs
 }
 
-func TestTearDown(path string, t *testing.T) {
+func TestTearDown(t *testing.T, path string) {
+	t.Helper()
 	err := os.RemoveAll(path)
 	if err != nil {
 		t.Fatalf("Could not remove %s, error %s", path, err)
+	}
+}
+
+func TestRemove(t *testing.T, path string) {
+	t.Helper()
+	err := os.Remove(path)
+	if err != nil {
+		t.Errorf("Got error when trying to remove %q, %q", path, err.Error())
 	}
 }
 
@@ -61,22 +70,22 @@ func TestCreateTmpDir() string {
 }
 
 // TestExists returns whether the given file or directory TestExists
-func TestExists(t *testing.T, path string) (bool, error) {
+func TestExists(t *testing.T, path string) bool {
 	t.Helper()
 	_, err := os.Stat(path)
+
 	if err == nil {
-		return true, nil
+		return true
 	}
 	if os.IsNotExist(err) {
-		return false, nil
+		return false
 	}
-	return false, err
+	return false
 }
 
 func TestExistsOrThrow(path string, t *testing.T) {
 	t.Helper()
-	exists, err := TestExists(t, path)
-	AssertNoError(t, err)
+	exists := TestExists(t, path)
 	if !exists {
 		t.Fatalf("%s does not exist", path)
 	}
@@ -100,8 +109,11 @@ func AssertNoError(t testing.TB, got error) {
 	}
 }
 
-func AssertError(t testing.TB, got error) {
+func AssertError(t testing.TB, got error, message string) {
 	t.Helper()
+	if got.Error() != message {
+		t.Fatalf("Expected error message to be %q, was %q", message, got.Error())
+	}
 	if got == nil {
 		t.Fatal("didn't get an error but expected one")
 	}
